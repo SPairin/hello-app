@@ -1,60 +1,30 @@
 import streamlit as st
-import sympy as sp
-import pandas as pd
-
+import matplotlib.pyplot as plt
+import numpy as np
 st.title("Newton-Raphson Root Finder")
 st.write("Enter a function $f(x)$ via keyboard to find its root iteratively.")
-
-# Keyboard inputs
-expr_str = st.text_input("Enter function f(x) (e.g., x**3 - x - 2):", "x**3 - x - 2")
-x0 = st.number_input("Initial guess (x0):", value=1.5)
-tolerance = st.number_input("Tolerance:", value=1e-6, format="%.1e")
-max_iter = st.slider("Maximum iterations:", 1, 100, 20)
-
-if st.button("Calculate Root"):
-    try:
-        # Define symbol
-        x = sp.Symbol('x')
-        f_expr = sp.sympify(expr_str)
-        df_expr = sp.diff(f_expr, x)
-        
-        # Convert to callable functions
-        f = sp.lambdify(x, f_expr, 'numpy')
-        df = sp.lambdify(x, df_expr, 'numpy')
-        
-        # Newton-Raphson Algorithm
-        history = []
-        xn = x0
-        converged = False
-        
-        for i in range(max_iter):
-            fx = f(xn)
-            dfx = df(xn)
-            
-            if dfx == 0:
-                st.error("Derivative is zero. Method fails.")
-                break
-                
-            xn_next = xn - fx / dfx
-            history.append({"Iteration": i + 1, "x_n": xn, "f(x_n)": fx, "f'(x_n)": dfx, "x_{n+1}": xn_next})
-            
-            if abs(xn_next - xn) < tolerance:
-                xn = xn_next
-                converged = True
-                break
-                
-            xn = xn_next
-            
-        # Display results
-        df_history = pd.DataFrame(history)
-        st.subheader("Iteration History")
-        st.dataframe(df_history)
-        
-        if converged:
-            st.success(f"Converged to root: **{xn:.6f}**")
-        else:
-            st.warning("Reached maximum iterations without full convergence.")
-            
-    .except Exception as e:
-        st.error(f"Error parsing expression: {e}")
-
+def f(x):
+    return x**3+4*x-5
+def df(x):
+    return 3*x**2+4
+err=1000
+x = st.number_input('Enter the initial guess', value=-5.0, step=0.1)
+plt.plot(x, f(x), 'bo')  # Plot the initial guess
+k=0
+while(err>=0.0001):
+    k=k+1
+    xnp1 = x - f(x)/df(x)
+    err = abs(xnp1-x)
+    x = xnp1
+    plt.plot(x, f(x), 'ko')  # Plot the initial guess
+st.write('Root is', xnp1)
+st.write('No. of iteration is', k)
+xi = np.linspace(xnp1-5,xnp1+5,100)
+yi = [f(x) for x in xi]
+plt.plot(xi, yi)
+plt.plot(xnp1, f(xnp1), 'ro')  # Mark the root on the plot
+plt.xlabel('x')
+plt.ylabel('f(x)')
+plt.title('Function Plot')
+plt.grid(True)
+st.pyplot(plt)
